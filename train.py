@@ -44,14 +44,21 @@ wandb_log = False # disabled by default
 wandb_project = 'owt'
 wandb_run_name = 'gpt2' # 'run' + str(time.time())
 # data
-dataset = 'openwebtext'
-gradient_accumulation_steps = 5 * 8 # used to simulate larger batch sizes
-batch_size = 12 # if gradient_accumulation_steps > 1, this is the micro-batch size
-block_size = 1024
+# dataset = 'openwebtext'
+# gradient_accumulation_steps = 5 * 8 # used to simulate larger batch sizes
+# batch_size = 12 # if gradient_accumulation_steps > 1, this is the micro-batch size
+# block_size = 1024
+dataset = 'shakespeare_char'
+gradient_accumulation_steps = 4 # used to simulate larger batch sizes
+batch_size = 128 # if gradient_accumulation_steps > 1, this is the micro-batch size
+block_size = 256
 # model
-n_layer = 12
-n_head = 12
-n_embd = 768
+n_layer = 6
+n_head = 6
+n_embd = 384
+# n_layer = 12
+# n_head = 12
+# n_embd = 768
 dropout = 0.0 # for pretraining 0 is good, for finetuning try 0.1+
 bias = False # do we use bias inside LayerNorm and Linear layers?
 # adamw optimizer
@@ -198,6 +205,7 @@ if init_from == 'resume':
     optimizer.load_state_dict(checkpoint['optimizer'])
 checkpoint = None # free up memory
 
+torch.cuda.memory._record_memory_history()
 # compile the model
 if compile:
     print("compiling the model... (takes a ~minute)")
@@ -328,6 +336,10 @@ while True:
     # termination conditions
     if iter_num > max_iters:
         break
+    if iter_num == 3:
+        torch.cuda.memory._dump_snapshot("my_snapshot.pickle")
+        break
+
 
 if ddp:
     destroy_process_group()
